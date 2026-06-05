@@ -1,0 +1,26 @@
+# --- data: never commit the candidate pool or unpacked archives ---
+*.jsonl
+*.jsonl.gz
+*.zip
+candidates*
+data/
+ 
+# --- precomputed artifacts (too big for git; rebuilt by build_index.py) ---
+artifacts/
+*.npy
+*.parquet
+*.faiss
+ 
+# --- python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+ 
+# --- os / editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+ 
