@@ -1,0 +1,5 @@
+fastembed
+numpy
+pandas
+pyarrow
+scikit-learn
