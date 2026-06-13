@@ -25,7 +25,7 @@ import numpy as np
 import pandas as pd
 
 # How the blended score is composed (documented + tunable in one place).
-W_SEM, W_PROD, W_BAND, W_LOC, W_NOTICE = 0.50, 0.18, 0.14, 0.10, 0.08
+W_SEM, W_PROD, W_BAND, W_LOC, W_NOTICE = 0.40, 0.18, 0.24, 0.10, 0.08
 
 _RETR_TERMS = [
     ("learning-to-rank", "learning to rank"), ("ranking systems", "ranking"),
@@ -142,7 +142,9 @@ def main() -> None:
     core = (W_SEM * sem_norm + W_PROD * prod + W_BAND * band +
             W_LOC * loc + W_NOTICE * notice)
     penalties = comp_pen + dom_pen - 0.10 * np.minimum(stuff, 4.0)
-    score = np.clip(core + penalties, 0.0, None) * avail
+    # behavioral down-weight, softened: a dark candidate loses up to ~45%, not
+    # 90% — honours the JD's availability signal without burying strong people.
+    score = np.clip(core + penalties, 0.0, None) * (0.5 + 0.5 * avail)
     score[honey] = 0.0                       # Tier 0 gate
 
     # ---- rank: sort by score desc, deterministic id tiebreak ----
