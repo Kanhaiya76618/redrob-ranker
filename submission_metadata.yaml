@@ -1,0 +1,61 @@
+# Redrob Hackathon — Submission Metadata
+# The fields here should match what you submit via the portal at upload time.
+
+# ============================================================================
+# Team identity
+# ============================================================================
+team_name: "Kanhaiya Mehta"
+primary_contact:
+  name: "Kanhaiya Mehta"
+  email: "kanhaiyakumar76618@gmail.com"
+  phone: "+91-XXXXXXXXXX" # Please update with your phone number
+
+team_members:
+  - name: "Kanhaiya Mehta"
+    email: "kanhaiyakumar76618@gmail.com"
+    role: "ML Engineer"
+
+# ============================================================================
+# Code and reproducibility
+# ============================================================================
+github_repo: "https://github.com/Kanhaiya76618/redrob-ranker"
+sandbox_link: "https://huggingface.co/spaces/Kanhaiya76618/redrob-ranker" # Update if you host elsewhere
+reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submission.csv"
+
+# ============================================================================
+# Compute environment
+# ============================================================================
+compute:
+  platform: "MacBook Air"
+  cpu_cores: 8
+  ram_gb: 16
+  python_version: "3.11.4"
+  os: "macOS Sonoma"
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: true
+  pre_computation_time_minutes: 160
+
+# ============================================================================
+# AI tools declaration
+# ============================================================================
+ai_tools_used:
+  - "Claude"
+ai_usage_summary: |
+  Used Claude as a pair programmer for architectural design, debugging, feature/penalty optimizations, and building the Streamlit showroom. No candidate data was sent to hosted APIs.
+
+# ============================================================================
+# Approach summary
+# ============================================================================
+methodology_summary: |
+  Two-stage retrieve and rerank model. Tier 0 integrity gate blocks impossible honeypots. Tier 1 recall utilizes contrastive semantic fit (ideal minus anti-profiles vectors similarity). Tier 2 rerank employs a pre-trained LightGBM Regressor trained on synthetic labels derived from the JD rubric (integrating semantic fit, band fit, product company ratio, location fit, notice period fit, availability multiplier, company/domain/country penalties, stuffing/impossibility indices). Gated honeypot profiles are hard-filtered to score 0.0. Ties are broken deterministically by candidate ID ascending.
+
+# ============================================================================
+# Declarations
+# ============================================================================
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: true
