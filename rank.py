@@ -19,20 +19,15 @@ import argparse
 import gzip
 import json
 import os
-import re
+import sys
 
 import numpy as np
 import pandas as pd
 
-# How the blended score is composed (documented + tunable in one place).
-W_SEM, W_PROD, W_BAND, W_LOC, W_NOTICE = 0.40, 0.18, 0.24, 0.10, 0.08
-
-_RETR_TERMS = [
-    ("learning-to-rank", "learning to rank"), ("ranking systems", "ranking"),
-    ("retrieval", "retriev"), ("search relevance", "search"),
-    ("recommendation systems", "recommend"), ("embeddings", "embedding"),
-    ("semantic matching", "semantic"), ("vector search", "vector"),
-]
+sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
+import pickle
+import lightgbm as lgb
+from reasoning import make_reasoning
 
 
 def _open(path):
@@ -53,58 +48,6 @@ def fetch_records(path: str, want_ids: set) -> dict:
                 if len(out) == len(want_ids):
                     break
     return out
-
-
-def evidence_phrase(c: dict):
-    text = (c.get("profile", {}).get("summary", "") + " " +
-            " ".join(h.get("description", "") for h in c.get("career_history", []) or [])).lower()
-    for label, key in _RETR_TERMS:
-        if key in text:
-            return label
-    return None
-
-
-def make_reasoning(c: dict, fr: dict) -> str:
-    """Grounded, varied, honest 1-2 sentence justification from real fields."""
-    p = c.get("profile", {})
-    yrs = p.get("years_of_experience")
-    title = p.get("current_title", "professional")
-    comp = p.get("current_company") or (c.get("career_history") or [{}])[0].get("company")
-    lead = f"{yrs:.0f}y {title}" if isinstance(yrs, (int, float)) else title
-    if comp:
-        lead += f" at {comp}"
-
-    ev = evidence_phrase(c)
-    if ev and fr["product_score"] > 0:
-        s = f"{lead}; career shows hands-on {ev} work at product companies"
-    elif ev:
-        s = f"{lead} with demonstrated {ev} experience"
-    elif fr["product_score"] > 0:
-        s = f"{lead} with product-company background"
-    else:
-        s = lead
-
-    extra = []
-    if fr["location_fit"] >= 0.85:
-        extra.append("well-located for Pune/Noida")
-    if fr["availability"] >= 0.7:
-        extra.append("active and responsive on-platform")
-    if extra:
-        s += "; " + ", ".join(extra)
-    s += "."
-
-    concerns = []
-    if fr["notice_fit"] <= 0.5:
-        concerns.append("long notice period")
-    if fr.get("consulting_only"):
-        concerns.append("services-only background")
-    if fr["availability"] < 0.4:
-        concerns.append("limited recent activity")
-    if fr["domain_penalty"] < 0:
-        concerns.append("thin NLP/IR signal")
-    if concerns:
-        s += " Concern: " + ", ".join(concerns) + "."
-    return s
 
 
 def main() -> None:
@@ -128,23 +71,30 @@ def main() -> None:
     sem = (emb @ ideal.T).max(1) - (emb @ anti.T).max(1)
     sem_norm = (sem - sem.min()) / (sem.max() - sem.min() + 1e-9)
 
-    band = feat["band_fit"].to_numpy()
-    prod = feat["product_score"].to_numpy()
-    loc = feat["location_fit"].to_numpy()
-    notice = feat["notice_fit"].to_numpy()
-    avail = feat["availability"].to_numpy()
-    comp_pen = feat["company_penalty"].to_numpy()
-    dom_pen = feat["domain_penalty"].to_numpy()
-    stuff = feat["stuffing_score"].to_numpy()
+    feat["semantic_fit"] = sem_norm
     honey = feat["is_honeypot"].to_numpy().astype(bool)
 
-    # ---- Tier 2: blended score, behavioral multiplier, honeypot gate ----
-    core = (W_SEM * sem_norm + W_PROD * prod + W_BAND * band +
-            W_LOC * loc + W_NOTICE * notice)
-    penalties = comp_pen + dom_pen - 0.10 * np.minimum(stuff, 4.0)
-    # behavioral down-weight, softened: a dark candidate loses up to ~45%, not
-    # 90% — honours the JD's availability signal without burying strong people.
-    score = np.clip(core + penalties, 0.0, None) * (0.5 + 0.5 * avail)
+    # ---- Tier 2: LightGBM Regressor prediction ----
+    feature_cols = [
+        "semantic_fit",
+        "band_fit",
+        "product_score",
+        "location_fit",
+        "notice_fit",
+        "availability",
+        "company_penalty",
+        "domain_penalty",
+        "country_penalty",
+        "stuffing_score",
+        "impossibility_score"
+    ]
+    X = feat[feature_cols]
+
+    model_path = os.path.join(args.artifacts, "ranker_model.pkl")
+    with open(model_path, "rb") as f:
+        model = pickle.load(f)
+
+    score = model.predict(X)
     score[honey] = 0.0                       # Tier 0 gate
 
     # ---- rank: sort by score desc, deterministic id tiebreak ----
