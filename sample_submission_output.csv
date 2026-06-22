@@ -1,0 +1,51 @@
+candidate_id,rank,score,reasoning
+CAND_0000031,1,0.96232,"6y Recommendation Systems Engineer at Swiggy; career shows hands-on ranking systems work at product companies; well-located for Pune/Noida, active and responsive on-platform."
+CAND_0000046,2,0.11356,8y Mechanical Engineer at Hooli with product-company background.
+CAND_0000022,3,0.10761,1y Mechanical Engineer at Hooli; career shows hands-on search relevance work at product companies. Concern: long notice period.
+CAND_0000001,4,0.1076,7y Backend Engineer at Mindtree; active and responsive on-platform. Concern: thin NLP/IR signal.
+CAND_0000024,5,0.10265,8y HR Manager at TCS with demonstrated search relevance experience. Concern: services-only background.
+CAND_0000030,6,0.1022,10y Marketing Manager at Dunder Mifflin; career shows hands-on search relevance work at product companies.
+CAND_0000016,7,0.10102,5y Accountant at Infosys; well-located for Pune/Noida. Concern: thin NLP/IR signal.
+CAND_0000033,8,0.10062,9y Graphic Designer at Wipro; well-located for Pune/Noida. Concern: thin NLP/IR signal.
+CAND_0000007,9,0.10044,"6y Civil Engineer at Wipro with product-company background; well-located for Pune/Noida, active and responsive on-platform. Concern: thin NLP/IR signal."
+CAND_0000029,10,0.10034,"7y Business Analyst at Wipro; well-located for Pune/Noida. Concern: limited recent activity, thin NLP/IR signal."
+CAND_0000048,11,0.10028,"10y Mobile Developer at CRED with product-company background; well-located for Pune/Noida, active and responsive on-platform. Concern: long notice period, thin NLP/IR signal."
+CAND_0000044,12,0.10024,"6y Frontend Engineer at Tech Mahindra with product-company background. Concern: long notice period, thin NLP/IR signal."
+CAND_0000038,13,0.1001,"7y Java Developer at Swiggy with product-company background. Concern: long notice period, thin NLP/IR signal."
+CAND_0000040,14,0.1,"2y Customer Support at Globex Inc. Concern: long notice period, thin NLP/IR signal."
+CAND_0000015,15,0.09999,"5y Software Engineer at Razorpay with product-company background. Concern: long notice period, thin NLP/IR signal."
+CAND_0000041,16,0.09997,14y Operations Manager at Hooli with product-company background; well-located for Pune/Noida. Concern: long notice period.
+CAND_0000027,17,0.09994,"4y DevOps Engineer at Infosys; active and responsive on-platform. Concern: long notice period, services-only background, thin NLP/IR signal."
+CAND_0000010,18,0.09993,"5y Data Engineer at Ola. Concern: long notice period, thin NLP/IR signal."
+CAND_0000014,19,0.09991,"8y Frontend Engineer at Zomato with product-company background; well-located for Pune/Noida, active and responsive on-platform. Concern: long notice period, thin NLP/IR signal."
+CAND_0000020,20,0.09987,6y Mechanical Engineer at Wipro with demonstrated search relevance experience.
+CAND_0000025,21,0.09985,"7y Frontend Engineer at Tech Mahindra with product-company background; active and responsive on-platform. Concern: long notice period, thin NLP/IR signal."
+CAND_0000009,22,0.09981,"11y Mechanical Engineer at Dunder Mifflin. Concern: long notice period, thin NLP/IR signal."
+CAND_0000039,23,0.0998,4y Marketing Manager at Acme Corp; active and responsive on-platform. Concern: thin NLP/IR signal.
+CAND_0000032,24,0.09978,"8y .NET Developer at Cognizant; well-located for Pune/Noida. Concern: long notice period, thin NLP/IR signal."
+CAND_0000006,25,0.09971,"6y Business Analyst at Wayne Enterprises with product-company background. Concern: long notice period, thin NLP/IR signal."
+CAND_0000008,26,0.09971,"4y Operations Manager at Wipro; well-located for Pune/Noida. Concern: long notice period, services-only background, thin NLP/IR signal."
+CAND_0000035,27,0.09971,4y Full Stack Developer at Globex Inc; well-located for Pune/Noida. Concern: thin NLP/IR signal.
+CAND_0000019,28,0.0997,6y Project Manager at Wayne Enterprises with product-company background. Concern: thin NLP/IR signal.
+CAND_0000026,29,0.0997,7y Graphic Designer at Initech; career shows hands-on search relevance work at product companies.
+CAND_0000028,30,0.09969,"1y Operations Manager at Wipro. Concern: services-only background, thin NLP/IR signal."
+CAND_0000023,31,0.09967,4y Software Engineer at Acme Corp with product-company background; active and responsive on-platform. Concern: thin NLP/IR signal.
+CAND_0000013,32,0.09966,1y Civil Engineer at Globex Inc. Concern: thin NLP/IR signal.
+CAND_0000005,33,0.09956,11y Accountant at Stark Industries with product-company background; well-located for Pune/Noida. Concern: thin NLP/IR signal.
+CAND_0000004,34,0.09956,4y Marketing Manager at Dunder Mifflin with demonstrated search relevance experience. Concern: long notice period.
+CAND_0000050,35,0.09953,14y Business Analyst at Infosys with product-company background; well-located for Pune/Noida. Concern: long notice period.
+CAND_0000047,36,0.09952,"2y Project Manager at TCS. Concern: long notice period, services-only background."
+CAND_0000036,37,0.09951,11y Project Manager at Initech with product-company background. Concern: thin NLP/IR signal.
+CAND_0000017,38,0.09948,"12y Accountant at Wipro with product-company background; well-located for Pune/Noida. Concern: long notice period, limited recent activity, thin NLP/IR signal."
+CAND_0000021,39,0.09938,14y Project Manager at Wipro with demonstrated vector search experience.
+CAND_0000002,40,0.09937,12y Operations Manager at Wipro with demonstrated search relevance experience.
+CAND_0000034,41,0.09937,14y Business Analyst at Wipro; career shows hands-on search relevance work at product companies. Concern: long notice period.
+CAND_0000012,42,0.09936,"1y Operations Manager at Stark Industries. Concern: limited recent activity, thin NLP/IR signal."
+CAND_0000003,43,0.09907,"1y Customer Support at TCS. Concern: long notice period, services-only background, thin NLP/IR signal."
+CAND_0000018,44,0.09904,"7y Frontend Engineer at Acme Corp with product-company background. Concern: long notice period, thin NLP/IR signal."
+CAND_0000043,45,0.09898,"8y Cloud Engineer at Swiggy with product-company background. Concern: long notice period, thin NLP/IR signal."
+CAND_0000045,46,0.09896,12y Project Manager at Initech with product-company background; active and responsive on-platform. Concern: thin NLP/IR signal.
+CAND_0000037,47,0.09882,14y Business Analyst at Stark Industries with product-company background.
+CAND_0000011,48,0.09846,"2y QA Engineer at Pied Piper with product-company background; well-located for Pune/Noida. Concern: long notice period, thin NLP/IR signal."
+CAND_0000042,49,0.09824,5y HR Manager at Wayne Enterprises with demonstrated search relevance experience.
+CAND_0000049,50,0.09607,12y Mechanical Engineer at Wayne Enterprises with product-company background; active and responsive on-platform. Concern: long notice period.
