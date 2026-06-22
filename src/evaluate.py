@@ -42,7 +42,7 @@ def silver_tier(row) -> int:
     """Transparent 0-5 relevance tier from the JD rubric."""
     if row["is_honeypot"]:
         return 0                                   # impossible profile
-    if row["consulting_only"] or row["stuffing_score"] >= 2 or row["domain_penalty"] < 0:
+    if row["consulting_only"] or row["stuffing_score"] >= 2 or row["domain_penalty"] < 0 or row["country_penalty"] < 0:
         return 1                                   # explicit do-not-want
     ai = bool(_AI_TITLE.search(str(row["title"])))
     strong = bool(_STRONG_TITLE.search(str(row["title"])))
@@ -99,7 +99,7 @@ def score_all(sem_norm, F, cfg):
     core = (cfg["w_sem"] * sem_norm + cfg["w_prod"] * F["product_score"]
             + cfg["w_band"] * F["band_fit"] + cfg["w_loc"] * F["location_fit"]
             + cfg["w_notice"] * F["notice_fit"])
-    pen = (F["company_penalty"] + F["domain_penalty"] - 0.10 * np.minimum(F["stuffing_score"], 4.0)
+    pen = (F["company_penalty"] + F["domain_penalty"] + F["country_penalty"] - 0.10 * np.minimum(F["stuffing_score"], 4.0)
            if cfg.get("penalties", True) else 0.0)
     s = np.clip(core + pen, 0.0, None)
     if cfg["behavioral"]:
@@ -109,7 +109,7 @@ def score_all(sem_norm, F, cfg):
     return s
 
 
-FULL = dict(w_sem=.40, w_prod=.18, w_band=.24, w_loc=.10, w_notice=.08,
+FULL = dict(w_sem=.40, w_prod=.10, w_band=.35, w_loc=.05, w_notice=.10,
             behavioral=True, gate=True, penalties=True)
 ABLATIONS = {
     "FULL (tuned)":          FULL,
@@ -157,7 +157,33 @@ def main():
     sem_norm = (sem - sem.min()) / (sem.max() - sem.min() + 1e-9)
     F = {k: feat[k].to_numpy() for k in
          ["product_score", "band_fit", "location_fit", "notice_fit",
-          "company_penalty", "domain_penalty", "stuffing_score", "availability", "is_honeypot"]}
+          "company_penalty", "domain_penalty", "country_penalty", "stuffing_score", "availability", "is_honeypot"]}
+
+    import pickle
+    import lightgbm as lgb
+    
+    # Try to load LightGBM model
+    model_path = os.path.join(args.artifacts, "ranker_model.pkl")
+    lgb_scores = None
+    if os.path.exists(model_path):
+        with open(model_path, "rb") as f:
+            model = pickle.load(f)
+        feat["semantic_fit"] = sem_norm
+        feature_cols = [
+            "semantic_fit",
+            "band_fit",
+            "product_score",
+            "location_fit",
+            "notice_fit",
+            "availability",
+            "company_penalty",
+            "domain_penalty",
+            "country_penalty",
+            "stuffing_score",
+            "impossibility_score"
+        ]
+        lgb_scores = model.predict(feat[feature_cols])
+        lgb_scores[F["is_honeypot"].astype(bool)] = 0.0
 
     print(f"\n{'config':22} {'composite':>10} {'ndcg10':>8} {'ndcg50':>8} "
           f"{'map':>6} {'p@10':>6} {'honeypots@100':>14}")
@@ -169,6 +195,14 @@ def main():
         comp, m = composite(rt, all_tiers)
         hp = int(F["is_honeypot"][order].sum())
         print(f"{name:22} {comp:>10.4f} {m['ndcg10']:>8.4f} {m['ndcg50']:>8.4f} "
+              f"{m['map']:>6.3f} {m['p10']:>6.2f} {hp:>14}")
+
+    if lgb_scores is not None:
+        order = np.lexsort((ids, -lgb_scores))[:100]
+        rt = tiers[order].tolist()
+        comp, m = composite(rt, all_tiers)
+        hp = int(F["is_honeypot"][order].sum())
+        print(f"{'LightGBM Regressor':22} {comp:>10.4f} {m['ndcg10']:>8.4f} {m['ndcg50']:>8.4f} "
               f"{m['map']:>6.3f} {m['p10']:>6.2f} {hp:>14}")
 
     # objective trap breakdown for the FULL model's top-K
@@ -185,6 +219,14 @@ def main():
     print("\nobjective trap counts (FULL model):")
     print(f"  top 10 : {traps(sub.head(10))}")
     print(f"  top 100: {traps(sub)}")
+    
+    if lgb_scores is not None:
+        lgb_order = np.lexsort((ids, -lgb_scores))[:100]
+        lgb_sub = feat.iloc[lgb_order]
+        print("\nobjective trap counts (LightGBM model):")
+        print(f"  top 10 : {traps(lgb_sub.head(10))}")
+        print(f"  top 100: {traps(lgb_sub)}")
+
     print("\nNOTE: silver NDCG is optimistic (labels overlap ranker signals). "
           "Trust honeypot rate, trap counts, and ablation deltas.")
 

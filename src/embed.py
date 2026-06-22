@@ -43,6 +43,9 @@ def main() -> None:
     ap.add_argument("--candidates", required=True, help="path to candidates.jsonl[.gz]")
     ap.add_argument("--artifacts", default="artifacts", help="output dir")
     ap.add_argument("--batch", type=int, default=256)
+    ap.add_argument("--backend", choices=["fastembed", "st"], default="fastembed",
+                    help="fastembed = quantized ONNX on CPU; "
+                         "st = sentence-transformers on cuda/mps/cpu")
     args = ap.parse_args()
     os.makedirs(args.artifacts, exist_ok=True)
 
@@ -70,28 +73,44 @@ def main() -> None:
         texts.append(candidate_text(c))
     print("features + integrity computed")
 
-    # 3) Embed candidates (the slow part; minutes on CPU). Stream one vector
-    #    at a time into a preallocated array with a live progress bar, so memory
-    #    stays flat and you can watch progress + ETA.
-    from fastembed import TextEmbedding
-    from tqdm import tqdm
-    model = TextEmbedding(model_name=MODEL)
-    print("embedding candidates...")
-    gen = model.embed(texts, batch_size=args.batch)
-    first = next(gen)
-    dim = len(first)
-    embs = np.zeros((len(texts), dim), dtype=np.float32)
-    embs[0] = first
-    for i, v in enumerate(tqdm(gen, total=len(texts) - 1, initial=1,
-                               desc="embedding", unit="cand"), start=1):
-        embs[i] = v
-    embs = l2_normalize(embs)
-    print("candidate embeddings:", embs.shape)
-
-    # 4) Embed the ideal / anti profiles once.
+    # 3) Embed candidates (the slow part; minutes on CPU). Two interchangeable
+    #    backends produce the same L2-normalized vectors:
+    #      fastembed -> quantized ONNX on CPU, no torch needed
+    #      st        -> sentence-transformers on cuda -> mps -> cpu
     prof = get_profiles()
-    ideal = l2_normalize(np.asarray(list(model.embed(prof["ideal"])), dtype=np.float32))
-    anti = l2_normalize(np.asarray(list(model.embed(prof["anti"])), dtype=np.float32))
+    if args.backend == "fastembed":
+        # Stream one vector at a time into a preallocated array with a live
+        # progress bar, so memory stays flat and you can watch progress + ETA.
+        from fastembed import TextEmbedding
+        from tqdm import tqdm
+        model = TextEmbedding(model_name=MODEL)
+        print("embedding candidates (fastembed / CPU ONNX)...")
+        gen = model.embed(texts, batch_size=args.batch)
+        first = next(gen)
+        dim = len(first)
+        embs = np.zeros((len(texts), dim), dtype=np.float32)
+        embs[0] = first
+        for i, v in enumerate(tqdm(gen, total=len(texts) - 1, initial=1,
+                                   desc="embedding", unit="cand"), start=1):
+            embs[i] = v
+        embs = l2_normalize(embs)
+        ideal = l2_normalize(np.asarray(list(model.embed(prof["ideal"])), dtype=np.float32))
+        anti = l2_normalize(np.asarray(list(model.embed(prof["anti"])), dtype=np.float32))
+    else:  # st: sentence-transformers, GPU when available
+        import torch
+        from sentence_transformers import SentenceTransformer
+        device = ("cuda" if torch.cuda.is_available()
+                  else "mps" if torch.backends.mps.is_available()
+                  else "cpu")
+        print(f"embedding candidates (sentence-transformers on {device})...")
+        model = SentenceTransformer(MODEL, device=device)
+        embs = model.encode(texts, batch_size=args.batch, normalize_embeddings=True,
+                            show_progress_bar=True, convert_to_numpy=True).astype(np.float32)
+        ideal = model.encode(prof["ideal"], normalize_embeddings=True,
+                             convert_to_numpy=True).astype(np.float32)
+        anti = model.encode(prof["anti"], normalize_embeddings=True,
+                            convert_to_numpy=True).astype(np.float32)
+    print("candidate embeddings:", embs.shape)
     print(f"profile vectors: ideal {ideal.shape}, anti {anti.shape}")
 
     # 5) Persist artifacts.
