@@ -11,8 +11,12 @@ in the Stage-5 interview.
 from __future__ import annotations
 
 from datetime import date
+import re
 
 from parse import parse_date, months_between
+
+_AI_TITLE = re.compile(r"\b(?:ml|ai|machine learning|data scien|nlp|research|recommend|search|applied|retrieval|rank)", re.I)
+
 
 # --- company / domain knowledge -------------------------------------------
 # JD explicitly does NOT want careers spent entirely at services/consulting.
@@ -95,6 +99,13 @@ def domain_penalty(c: dict) -> float:
         pen -= 0.50
     if has_research and not has_product:  # pure research, no production
         pen -= 0.45
+        
+    # Non-AI title without NLP/IR keywords -> not a fit
+    title = (p.get("current_title") or "").lower()
+    is_ai = bool(_AI_TITLE.search(title))
+    if not is_ai and not has_nlp:
+        pen -= 0.50
+        
     return round(pen, 3)
 
 
@@ -143,6 +154,14 @@ def availability(c: dict, reference: date) -> float:
     return round(min(1.0, max(0.1, score)), 3)
 
 
+def country_penalty(c: dict) -> float:
+    p = c.get("profile", {})
+    country = (p.get("country") or "").lower()
+    if country not in ("india", "in", ""):
+        return -0.20
+    return 0.0
+
+
 def compute_features(c: dict, reference: date) -> dict:
     """One flat, interpretable feature dict per candidate."""
     p = c.get("profile", {})
@@ -156,6 +175,7 @@ def compute_features(c: dict, reference: date) -> dict:
         "location_fit": location_fit(c),
         "notice_fit": notice_fit(c),
         "availability": availability(c, reference),
+        "country_penalty": country_penalty(c),
     }
 
 
